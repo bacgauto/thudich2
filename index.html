@@ -2,7 +2,8 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>🎤 Captions Live - Phiên bản cải tiến</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎤 Captions Live - Phiên bản câu ngắn</title>
   <style>
     * {
       box-sizing: border-box;
@@ -225,6 +226,10 @@
       margin-right: 5px;
     }
     
+    .pulse.orange {
+      background: #ffa500;
+    }
+    
     @keyframes pulse {
       0% {
         transform: scale(0.95);
@@ -239,9 +244,69 @@
         box-shadow: 0 0 0 0 rgba(255, 65, 108, 0);
       }
     }
+    
+    .permission-popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    
+    .permission-box {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    .permission-box h2 {
+      color: #00c9ff;
+      margin-bottom: 20px;
+    }
+    
+    .permission-box p {
+      margin-bottom: 25px;
+      line-height: 1.6;
+    }
+    
+    .permission-btn {
+      background: linear-gradient(135deg, #00c9ff, #00a5c9);
+      color: white;
+      padding: 12px 30px;
+      font-size: 1.1em;
+      font-weight: 600;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 201, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .permission-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 201, 255, 0.5);
+    }
   </style>
 </head>
 <body>
+  <div class="permission-popup" id="permissionPopup">
+    <div class="permission-box">
+      <h2>Cho phép sử dụng microphone</h2>
+      <p>Để Captions Live hoạt động, vui lòng cho phép trình duyệt sử dụng microphone của bạn. Chúng tôi cam kết bảo mật và không lưu trữ bất kỳ dữ liệu âm thanh nào.</p>
+      <button class="permission-btn" id="grantPermissionBtn">Cho phép sử dụng microphone</button>
+    </div>
+  </div>
+  
   <div class="header">
     <div class="title">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -249,10 +314,24 @@
         <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" fill="#00c9ff"/>
         <path d="M19 12C19 15.866 15.866 19 12 19C8.13401 19 5 15.866 5 12C5 8.13401 8.13401 5 12 5C15.866 5 19 8.13401 19 12Z" stroke="#00c9ff" stroke-width="2"/>
       </svg>
-      <span>CAPTIONS LIVE - PHIÊN BẢN CAO CẤP</span>
+      <span>CAPTIONS LIVE - PHIÊN BẢN CÂU NGẮN</span>
     </div>
     
     <div class="controls">
+      <button id="startMicBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C10.9391 2 9.92172 2.42143 9.17157 3.17157C8.42143 3.92172 8 4.93913 8 6V12C8 13.0609 8.42143 14.0783 9.17157 14.8284C9.92172 15.5786 10.9391 16 12 16C13.0609 16 14.0783 15.5786 14.8284 14.8284C15.5786 14.0783 16 13.0609 16 12V6C16 4.93913 15.5786 3.92172 14.8284 3.17157C14.0783 2.42143 13.0609 2 12 2Z" stroke="white" stroke-width="2"/>
+          <path d="M19 10V12C19 13.8565 18.2625 15.637 16.9497 16.9497C15.637 18.2625 13.8565 19 12 19C10.1435 19 8.36301 18.2625 7.05025 16.9497C5.7375 15.637 5 13.8565 5 12V10" stroke="white" stroke-width="2"/>
+        </svg>
+        Kích hoạt Micro
+      </button>
+      <button id="stopMicBtn" class="stop">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="6" y="5" width="4" height="14" rx="1" fill="white"/>
+          <rect x="14" y="5" width="4" height="14" rx="1" fill="white"/>
+        </svg>
+        Dừng Micro
+      </button>
       <button onclick="startFakeAudio()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M14 3V5.5M18 3V8.5M5.5 16.5L8 14.5V20.5L5.5 18.5M15 5.5L20 3V21L15 18.5V5.5Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -266,9 +345,9 @@
         </svg>
         Dừng âm thanh giả
       </button>
-      <div id="recogStatus" class="status active">
-        <span class="pulse"></span>
-        Đang nhận diện giọng nói...
+      <div id="recogStatus" class="status">
+        <span class="pulse orange"></span>
+        Chưa kích hoạt microphone
       </div>
     </div>
   </div>
@@ -276,17 +355,17 @@
   <div id="partial" class="block" tabindex="0">
     <div class="block-header">
       <span>Nhận diện tức thời</span>
-      <span>Đang hoạt động</span>
+      <span>Đang chờ kích hoạt</span>
     </div>
     <div class="block-content" id="partial-content">
-      [🎧 Đang bắt chữ từng phần...]
+      [🎤 Vui lòng nhấn "Kích hoạt Micro" và cho phép sử dụng microphone]
     </div>
   </div>
   
   <div id="final" class="block" tabindex="0">
     <div class="block-header">
       <span>Văn bản hoàn chỉnh</span>
-      <span>Đã xác nhận</span>
+      <span>Đang chờ dữ liệu</span>
     </div>
     <div class="block-content" id="final-content"></div>
   </div>
@@ -294,18 +373,22 @@
   <div id="translated" class="block" tabindex="0">
     <div class="block-header">
       <span>Bản dịch tiếng Anh</span>
-      <span>Đang dịch...</span>
+      <span>Đang chờ dữ liệu</span>
     </div>
     <div class="block-content" id="translated-content"></div>
   </div>
   
   <div class="footer">
-    Captions Live v2.0 | Hoạt động tương tự ZipCaptions | Nhận diện giọng nói thời gian thực
+    Captions Live v5.0 | Khắc phục lỗi lặp chữ | Cập nhật từng câu ngắn
   </div>
   
-  <audio id="fakeAudio" src="dummy.mp3" preload="auto" loop></audio>
+  <audio id="fakeAudio" preload="auto" loop>
+    <!-- Tạo âm thanh trắng 5 giây -->
+    <source src="data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" type="audio/mpeg">
+  </audio>
 
   <script>
+    // Kiểm tra hỗ trợ Web Speech API
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert("Trình duyệt của bạn không hỗ trợ Web Speech API. Vui lòng sử dụng Chrome hoặc Edge.");
@@ -313,22 +396,100 @@
       document.getElementById("recogStatus").innerHTML = "Không hỗ trợ Web Speech API";
     }
 
-    const recog = new SpeechRecognition();
-    recog.lang = "vi-VN";
-    recog.continuous = true;
-    recog.interimResults = true;
-    recog.maxAlternatives = 1;
+    // Khởi tạo nhận diện giọng nói nếu được hỗ trợ
+    let recog;
+    if (SpeechRecognition) {
+      recog = new SpeechRecognition();
+      recog.lang = "vi-VN";
+      recog.continuous = true;
+      recog.interimResults = true;
+      recog.maxAlternatives = 1;
+    }
 
+    // Tham chiếu các phần tử DOM
     const partialContent = document.getElementById("partial-content");
     const finalContent = document.getElementById("final-content");
     const translatedContent = document.getElementById("translated-content");
     const fakeAudio = document.getElementById("fakeAudio");
     const statusEl = document.getElementById("recogStatus");
+    const permissionPopup = document.getElementById("permissionPopup");
+    const grantPermissionBtn = document.getElementById("grantPermissionBtn");
+    const startMicBtn = document.getElementById("startMicBtn");
+    const stopMicBtn = document.getElementById("stopMicBtn");
 
+    // Biến trạng thái
     let fakeAudioPlaying = false;
     let idleTimeout;
-    let lastFinalResult = "";
-    let lastPartialResult = "";
+    let recognitionActive = false;
+    let lastTranslationTime = 0; // Thời gian dịch cuối cùng
+    let sentenceBuffer = ""; // Bộ đệm câu
+    let lastProcessedText = ""; // Văn bản đã xử lý
+
+    // Hàm hiển thị popup yêu cầu quyền
+    function showPermissionPopup() {
+      permissionPopup.style.display = 'flex';
+    }
+
+    // Hàm ẩn popup yêu cầu quyền
+    function hidePermissionPopup() {
+      permissionPopup.style.display = 'none';
+    }
+
+    // Sự kiện khi người dùng đồng ý cấp quyền
+    grantPermissionBtn.addEventListener('click', () => {
+      hidePermissionPopup();
+      startSpeechRecognition();
+    });
+
+    // Hàm bắt đầu nhận diện giọng nói
+    function startSpeechRecognition() {
+      if (!SpeechRecognition) return;
+      
+      // Yêu cầu quyền microphone
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(() => {
+          recog.start();
+          recognitionActive = true;
+          statusEl.innerHTML = '<span class="pulse"></span> Đang nghe...';
+          console.log("Micro đã kích hoạt");
+          
+          // Cập nhật giao diện
+          document.querySelector('#partial .block-header span:last-child').textContent = 'Đang hoạt động';
+          partialContent.textContent = '[🎧 Đang bắt chữ từng phần...]';
+          
+          // Ẩn popup nếu đang hiển thị
+          hidePermissionPopup();
+          
+          // Reset bộ đệm
+          sentenceBuffer = "";
+          lastProcessedText = "";
+        })
+        .catch(err => {
+          console.error("Lỗi quyền microphone:", err);
+          showPermissionPopup();
+          statusEl.innerHTML = '<span class="pulse orange"></span> Lỗi quyền microphone!';
+        });
+    }
+
+    // Hàm dừng nhận diện giọng nói
+    function stopSpeechRecognition() {
+      if (!SpeechRecognition || !recognitionActive) return;
+      
+      recog.stop();
+      recognitionActive = false;
+      statusEl.innerHTML = '<span class="pulse orange"></span> Đã dừng nhận diện';
+      console.log("Đã dừng nhận diện giọng nói");
+      
+      // Cập nhật giao diện
+      document.querySelector('#partial .block-header span:last-child').textContent = 'Đã dừng';
+      partialContent.textContent = '[⏹️ Đã dừng nhận diện]';
+      
+      // Xử lý phần còn lại trong bộ đệm
+      if (sentenceBuffer.trim()) {
+        processCompleteSentence(sentenceBuffer);
+        sentenceBuffer = "";
+      }
+    }
 
     // Hàm khởi động âm thanh giả
     function startFakeAudio() {
@@ -337,7 +498,7 @@
         fakeAudio.play().catch(err => console.log("Lỗi phát âm giả:", err));
         fakeAudioPlaying = true;
         console.log("▶ Bật âm thanh giả");
-        statusEl.innerHTML = '<span class="pulse"></span> Âm thanh giả đang chạy...';
+        statusEl.innerHTML = '<span class="pulse orange"></span> Âm thanh giả đang chạy...';
       }
     }
 
@@ -348,7 +509,12 @@
         fakeAudio.currentTime = 0;
         fakeAudioPlaying = false;
         console.log("⏹ Dừng âm thanh giả");
-        statusEl.innerHTML = '<span class="pulse"></span> Đang nhận diện giọng nói...';
+        
+        if (recognitionActive) {
+          statusEl.innerHTML = '<span class="pulse"></span> Đang nghe...';
+        } else {
+          statusEl.innerHTML = '<span class="pulse orange"></span> Đã dừng nhận diện';
+        }
       }
     }
 
@@ -361,78 +527,156 @@
       }, 5000);
     }
 
-    // Sự kiện khi có kết quả nhận diện
-    recog.onresult = async (e) => {
-      resetIdleTimer();
-      stopFakeAudio();
+    // Hàm xử lý câu hoàn chỉnh
+    function processCompleteSentence(sentence) {
+      // Thêm vào khung kết quả cuối cùng
+      if (finalContent.textContent.length > 0 && !finalContent.textContent.endsWith('\n')) {
+        finalContent.textContent += ' ';
+      }
+      finalContent.textContent += sentence;
       
-      let finalText = "";
-      let partialText = "";
+      // Dịch văn bản
+      translate(sentence);
       
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const result = e.results[i];
-        const text = result[0].transcript.trim();
-        
-        if (result.isFinal) {
-          // Bỏ qua các cụm từ không mong muốn
-          if (text.toLowerCase().includes("a nam ơi")) continue;
+      // Reset bộ đệm
+      sentenceBuffer = "";
+    }
+
+    // Hàm tách câu từ văn bản
+    function extractSentences(text) {
+      const punctuation = ['.', '?', '!', ';', ','];
+      const sentences = [];
+      let startIndex = 0;
+      
+      // Tìm các điểm tách câu tự nhiên
+      for (let i = 0; i < text.length; i++) {
+        if (punctuation.includes(text[i])) {
+          // Kiểm tra xem có đủ ít nhất 5 từ không
+          const sentenceCandidate = text.substring(startIndex, i + 1).trim();
+          const wordCount = sentenceCandidate.split(/\s+/).length;
           
-          // Thêm dấu cách nếu cần
-          if (lastFinalResult && !lastFinalResult.endsWith(' ') && !lastFinalResult.endsWith('\n')) {
-            finalText += ' ';
+          if (wordCount >= 5) {
+            sentences.push(sentenceCandidate);
+            startIndex = i + 1;
           }
-          
-          finalText += text;
-          lastFinalResult = text;
-          
-          // Thêm vào khung kết quả cuối cùng
-          if (finalContent.textContent.length > 0 && !finalContent.textContent.endsWith('\n')) {
-            finalContent.textContent += ' ';
-          }
-          finalContent.textContent += text;
-          
-          // Dịch văn bản
-          translate(text);
-          
-          // Xóa nội dung tạm thời
-          partialContent.textContent = "";
-          lastPartialResult = "";
-        } else {
-          // Xử lý kết quả tạm thời
-          partialText = text;
-          lastPartialResult = text;
         }
       }
       
-      // Hiển thị kết quả tạm thời nếu có
-      if (partialText) {
-        partialContent.textContent = partialText;
+      // Xử lý phần còn lại
+      const remaining = text.substring(startIndex).trim();
+      if (remaining && remaining.split(/\s+/).length >= 10) {
+        // Nếu phần còn lại dài hơn 10 từ, tách làm đôi
+        const words = remaining.split(/\s+/);
+        const half = Math.ceil(words.length / 2);
+        sentences.push(words.slice(0, half).join(' '));
+        sentenceBuffer = words.slice(half).join(' ');
+      } else if (remaining) {
+        sentenceBuffer = remaining;
       }
-    };
+      
+      return sentences;
+    }
 
-    // Sự kiện khi có lỗi
-    recog.onerror = e => {
-      console.error("Lỗi nhận diện:", e.error);
-      partialContent.textContent = "[Lỗi: " + e.error + "]";
-      startFakeAudio();
-      statusEl.innerHTML = '<span class="pulse"></span> Đã xảy ra lỗi - Đang thử lại...';
-    };
+    // Sự kiện khi có kết quả nhận diện
+    if (SpeechRecognition) {
+      recog.onresult = async (e) => {
+        resetIdleTimer();
+        stopFakeAudio();
+        
+        let hasNewText = false;
+        
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const result = e.results[i];
+          const text = result[0].transcript.trim();
+          
+          if (!text) continue;
+          
+          // Bỏ qua các cụm từ không mong muốn
+          if (text.toLowerCase().includes("a nam ơi")) continue;
+          
+          if (result.isFinal) {
+            // Xử lý kết quả cuối cùng
+            hasNewText = true;
+            lastProcessedText = text;
+            
+            // Thêm vào bộ đệm
+            if (sentenceBuffer) {
+              sentenceBuffer += ' ';
+            }
+            sentenceBuffer += text;
+            
+            // Tách câu từ bộ đệm
+            const sentences = extractSentences(sentenceBuffer);
+            
+            // Xử lý các câu đã tách
+            sentences.forEach(sentence => {
+              processCompleteSentence(sentence);
+            });
+          } else {
+            // Xử lý kết quả tạm thời
+            hasNewText = true;
+            
+            // Hiển thị kết quả tạm thời
+            partialContent.textContent = text;
+            
+            // Thêm vào bộ đệm (chỉ phần mới)
+            if (!text.startsWith(lastProcessedText)) {
+              const newText = text.replace(lastProcessedText, '').trim();
+              if (newText) {
+                if (sentenceBuffer && !sentenceBuffer.endsWith(' ')) {
+                  sentenceBuffer += ' ';
+                }
+                sentenceBuffer += newText;
+                lastProcessedText = text;
+              }
+            }
+            
+            // Kiểm tra xem có thể tách câu từ bộ đệm không
+            if (sentenceBuffer.split(/\s+/).length >= 10) {
+              const sentences = extractSentences(sentenceBuffer);
+              
+              // Xử lý các câu đã tách
+              sentences.forEach(sentence => {
+                processCompleteSentence(sentence);
+              });
+            }
+          }
+        }
+        
+        // Hiển thị bộ đệm nếu không có văn bản mới
+        if (!hasNewText && sentenceBuffer) {
+          partialContent.textContent = sentenceBuffer;
+        }
+      };
 
-    // Sự kiện khi kết thúc nhận diện
-    recog.onend = () => {
-      console.log("Nhận diện kết thúc - Khởi động lại");
-      setTimeout(() => {
-        recog.start();
-        statusEl.innerHTML = '<span class="pulse"></span> Đang nhận diện giọng nói...';
-      }, 300);
-      startFakeAudio();
-    };
+      // Sự kiện khi có lỗi
+      recog.onerror = e => {
+        console.error("Lỗi nhận diện:", e.error);
+        partialContent.textContent = "[Lỗi: " + e.error + "]";
+        startFakeAudio();
+        statusEl.innerHTML = '<span class="pulse orange"></span> Đã xảy ra lỗi - Đang thử lại...';
+      };
 
-    // Sự kiện khi bắt đầu nhận diện
-    recog.onstart = () => {
-      console.log("Nhận diện bắt đầu");
-      statusEl.innerHTML = '<span class="pulse"></span> Đang nhận diện giọng nói...';
-    };
+      // Sự kiện khi kết thúc nhận diện
+      recog.onend = () => {
+        console.log("Nhận diện kết thúc");
+        if (recognitionActive) {
+          console.log("Tự động khởi động lại nhận diện");
+          setTimeout(() => {
+            recog.start();
+            statusEl.innerHTML = '<span class="pulse"></span> Đang nghe...';
+          }, 300);
+        } else {
+          statusEl.innerHTML = '<span class="pulse orange"></span> Đã dừng nhận diện';
+        }
+      };
+
+      // Sự kiện khi bắt đầu nhận diện
+      recog.onstart = () => {
+        console.log("Nhận diện bắt đầu");
+        statusEl.innerHTML = '<span class="pulse"></span> Đang nghe...';
+      };
+    }
 
     // Hàm dịch văn bản
     async function translate(text) {
@@ -455,12 +699,10 @@
       }
     }
 
-    // Khởi động nhận diện giọng nói
-    if (SpeechRecognition) {
-      recog.start();
-      resetIdleTimer();
-    }
-    
+    // Gắn sự kiện cho các nút
+    startMicBtn.addEventListener('click', startSpeechRecognition);
+    stopMicBtn.addEventListener('click', stopSpeechRecognition);
+
     // Tự động cuộn khi nội dung mới được thêm vào
     function autoScroll(element) {
       element.scrollTop = element.scrollHeight;
@@ -470,6 +712,13 @@
     [partialContent, finalContent, translatedContent].forEach(el => {
       const observer = new MutationObserver(() => autoScroll(el));
       observer.observe(el, { childList: true, subtree: true });
+    });
+
+    // Hiển thị popup yêu cầu quyền khi trang tải xong
+    window.addEventListener('load', () => {
+      if (SpeechRecognition) {
+        showPermissionPopup();
+      }
     });
   </script>
 </body>
