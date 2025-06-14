@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>🎤 Captions Live - Phiên bản cải tiến</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: white;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr 1fr 1fr;
+      gap: 15px;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at top right, rgba(0, 100, 100, 0.2) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      padding: 0 5px 15px;
+      border-bottom: 1px solid rgba(0, 200, 200, 0.3);
+    }
+    
+    .title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #00c9ff, #92fe9d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      background: linear-gradient(135deg, #00c9ff, #00a5c9);
+      color: white;
+      padding: 12px 25px;
+      font-size: 1em;
+      font-weight: 600;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(0, 201, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 201, 255, 0.5);
+    }
+    
+    button:active {
+      transform: translateY(1px);
+    }
+    
+    button.stop {
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
+    }
+    
+    button.stop:hover {
+      box-shadow: 0 6px 20px rgba(255, 65, 108, 0.5);
+    }
+    
+    .status {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 8px 15px;
+      border-radius: 50px;
+      font-size: 0.9em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .status.active {
+      color: #90ee90;
+    }
+    
+    .status.inactive {
+      color: #ff6b6b;
+    }
+    
+    .block {
+      padding: 20px;
+      border-radius: 12px;
+      white-space: pre-line;
+      transition: all 0.3s ease;
+      overflow-y: auto;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+      position: relative;
+      line-height: 1.6;
+      max-height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .block-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 1.1em;
+      font-weight: 600;
+      color: #00c9ff;
+    }
+    
+    .block-content {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+    
+    /* Custom scrollbar */
+    .block-content::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .block-content::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+    }
+    
+    .block-content::-webkit-scrollbar-thumb {
+      background: #00c9ff;
+      border-radius: 3px;
+    }
+    
+    #partial {
+      background: linear-gradient(135deg, #003300, #001a00);
+      color: #90ee90;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+    
+    #final {
+      background: linear-gradient(135deg, #222, #1a1a1a);
+      font-size: 1.3em;
+    }
+    
+    #translated {
+      background: linear-gradient(135deg, #003366, #002244);
+      color: #d0f0ff;
+      font-size: 1.2em;
+      font-style: italic;
+    }
+    
+    .block:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.5);
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 20px 0 10px;
+      font-size: 0.9em;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    @media (max-width: 768px) {
+      body {
+        grid-template-rows: auto auto auto auto auto;
+      }
+      
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .controls {
+        width: 100%;
+      }
+      
+      button {
+        flex-grow: 1;
+        justify-content: center;
+      }
+    }
+    
+    .pulse {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ff416c;
+      box-shadow: 0 0 0 0 rgba(255, 65, 108, 0.7);
+      animation: pulse 2s infinite;
+      margin-right: 5px;
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 65, 108, 0.7);
+      }
+      70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(255, 65, 108, 0);
+      }
+      100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 65, 108, 0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 3V5M15.5 5.5L14 7M18 10H20M15.5 14.5L14 13M12 15V17M8.5 14.5L10 13M6 10H4M8.5 5.5L10 7" stroke="#00c9ff" stroke-width="2" stroke-linecap="round"/>
+        <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" fill="#00c9ff"/>
+        <path d="M19 12C19 15.866 15.866 19 12 19C8.13401 19 5 15.866 5 12C5 8.13401 8.13401 5 12 5C15.866 5 19 8.13401 19 12Z" stroke="#00c9ff" stroke-width="2"/>
+      </svg>
+      <span>CAPTIONS LIVE - PHIÊN BẢN CAO CẤP</span>
+    </div>
+    
+    <div class="controls">
+      <button onclick="startFakeAudio()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 3V5.5M18 3V8.5M5.5 16.5L8 14.5V20.5L5.5 18.5M15 5.5L20 3V21L15 18.5V5.5Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Bật âm thanh giả
+      </button>
+      <button class="stop" onclick="stopFakeAudio()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="6" y="5" width="4" height="14" rx="1" fill="white"/>
+          <rect x="14" y="5" width="4" height="14" rx="1" fill="white"/>
+        </svg>
+        Dừng âm thanh giả
+      </button>
+      <div id="recogStatus" class="status active">
+        <span class="pulse"></span>
+        Đang nhận diện giọng nói...
+      </div>
+    </div>
+  </div>
+  
+  <div id="partial" class="block" tabindex="0">
+    <div class="block-header">
+      <span>Nhận diện tức thời</span>
+      <span>Đang hoạt động</span>
+    </div>
+    <div class="block-content" id="partial-content">
+      [🎧 Đang bắt chữ từng phần...]
+    </div>
+  </div>
+  
+  <div id="final" class="block" tabindex="0">
+    <div class="block-header">
+      <span>Văn bản hoàn chỉnh</span>
+      <span>Đã xác nhận</span>
+    </div>
+    <div class="block-content" id="final-content"></div>
+  </div>
+  
+  <div id="translated" class="block" tabindex="0">
+    <div class="block-header">
+      <span>Bản dịch tiếng Anh</span>
+      <span>Đang dịch...</span>
+    </div>
+    <div class="block-content" id="translated-content"></div>
+  </div>
+  
+  <div class="footer">
+    Captions Live v2.0 | Hoạt động tương tự ZipCaptions | Nhận diện giọng nói thời gian thực
+  </div>
+  
+  <audio id="fakeAudio" src="dummy.mp3" preload="auto" loop></audio>
+
+  <script>
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Trình duyệt của bạn không hỗ trợ Web Speech API. Vui lòng sử dụng Chrome hoặc Edge.");
+      document.getElementById("recogStatus").className = "status inactive";
+      document.getElementById("recogStatus").innerHTML = "Không hỗ trợ Web Speech API";
+    }
+
+    const recog = new SpeechRecognition();
+    recog.lang = "vi-VN";
+    recog.continuous = true;
+    recog.interimResults = true;
+    recog.maxAlternatives = 1;
+
+    const partialContent = document.getElementById("partial-content");
+    const finalContent = document.getElementById("final-content");
+    const translatedContent = document.getElementById("translated-content");
+    const fakeAudio = document.getElementById("fakeAudio");
+    const statusEl = document.getElementById("recogStatus");
+
+    let fakeAudioPlaying = false;
+    let idleTimeout;
+    let lastFinalResult = "";
+    let lastPartialResult = "";
+
+    // Hàm khởi động âm thanh giả
+    function startFakeAudio() {
+      if (!fakeAudioPlaying) {
+        fakeAudio.volume = 0.01;
+        fakeAudio.play().catch(err => console.log("Lỗi phát âm giả:", err));
+        fakeAudioPlaying = true;
+        console.log("▶ Bật âm thanh giả");
+        statusEl.innerHTML = '<span class="pulse"></span> Âm thanh giả đang chạy...';
+      }
+    }
+
+    // Hàm dừng âm thanh giả
+    function stopFakeAudio() {
+      if (fakeAudioPlaying) {
+        fakeAudio.pause();
+        fakeAudio.currentTime = 0;
+        fakeAudioPlaying = false;
+        console.log("⏹ Dừng âm thanh giả");
+        statusEl.innerHTML = '<span class="pulse"></span> Đang nhận diện giọng nói...';
+      }
+    }
+
+    // Hàm đặt lại bộ đếm thời gian nhàn rỗi
+    function resetIdleTimer() {
+      clearTimeout(idleTimeout);
+      idleTimeout = setTimeout(() => {
+        console.log("🤫 Không phát hiện tiếng nói → bật âm thanh giả");
+        startFakeAudio();
+      }, 5000);
+    }
+
+    // Sự kiện khi có kết quả nhận diện
+    recog.onresult = async (e) => {
+      resetIdleTimer();
+      stopFakeAudio();
+      
+      let finalText = "";
+      let partialText = "";
+      
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const result = e.results[i];
+        const text = result[0].transcript.trim();
+        
+        if (result.isFinal) {
+          // Bỏ qua các cụm từ không mong muốn
+          if (text.toLowerCase().includes("a nam ơi")) continue;
+          
+          // Thêm dấu cách nếu cần
+          if (lastFinalResult && !lastFinalResult.endsWith(' ') && !lastFinalResult.endsWith('\n')) {
+            finalText += ' ';
+          }
+          
+          finalText += text;
+          lastFinalResult = text;
+          
+          // Thêm vào khung kết quả cuối cùng
+          if (finalContent.textContent.length > 0 && !finalContent.textContent.endsWith('\n')) {
+            finalContent.textContent += ' ';
+          }
+          finalContent.textContent += text;
+          
+          // Dịch văn bản
+          translate(text);
+          
+          // Xóa nội dung tạm thời
+          partialContent.textContent = "";
+          lastPartialResult = "";
+        } else {
+          // Xử lý kết quả tạm thời
+          partialText = text;
+          lastPartialResult = text;
+        }
+      }
+      
+      // Hiển thị kết quả tạm thời nếu có
+      if (partialText) {
+        partialContent.textContent = partialText;
+      }
+    };
+
+    // Sự kiện khi có lỗi
+    recog.onerror = e => {
+      console.error("Lỗi nhận diện:", e.error);
+      partialContent.textContent = "[Lỗi: " + e.error + "]";
+      startFakeAudio();
+      statusEl.innerHTML = '<span class="pulse"></span> Đã xảy ra lỗi - Đang thử lại...';
+    };
+
+    // Sự kiện khi kết thúc nhận diện
+    recog.onend = () => {
+      console.log("Nhận diện kết thúc - Khởi động lại");
+      setTimeout(() => {
+        recog.start();
+        statusEl.innerHTML = '<span class="pulse"></span> Đang nhận diện giọng nói...';
+      }, 300);
+      startFakeAudio();
+    };
+
+    // Sự kiện khi bắt đầu nhận diện
+    recog.onstart = () => {
+      console.log("Nhận diện bắt đầu");
+      statusEl.innerHTML = '<span class="pulse"></span> Đang nhận diện giọng nói...';
+    };
+
+    // Hàm dịch văn bản
+    async function translate(text) {
+      if (!text.trim()) return;
+      
+      try {
+        const res = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=en&dt=t&q=" + encodeURIComponent(text));
+        const data = await res.json();
+        const translated = data[0].map(x => x[0]).join("");
+        
+        // Thêm dấu cách nếu cần
+        if (translatedContent.textContent.length > 0 && !translatedContent.textContent.endsWith('\n')) {
+          translatedContent.textContent += ' ';
+        }
+        
+        translatedContent.textContent += translated;
+      } catch (err) {
+        console.error("Lỗi dịch thuật:", err);
+        translatedContent.textContent += "[Lỗi dịch] ";
+      }
+    }
+
+    // Khởi động nhận diện giọng nói
+    if (SpeechRecognition) {
+      recog.start();
+      resetIdleTimer();
+    }
+    
+    // Tự động cuộn khi nội dung mới được thêm vào
+    function autoScroll(element) {
+      element.scrollTop = element.scrollHeight;
+    }
+    
+    // Theo dõi các phần tử để tự động cuộn
+    [partialContent, finalContent, translatedContent].forEach(el => {
+      const observer = new MutationObserver(() => autoScroll(el));
+      observer.observe(el, { childList: true, subtree: true });
+    });
+  </script>
+</body>
+</html>
