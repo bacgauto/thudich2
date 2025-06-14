@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎤 Captions Live - Phiên bản cao cấp</title>
+  <title>🎤 Captions Live - Phiên bản câu ngắn</title>
   <style>
     * {
       box-sizing: border-box;
@@ -314,7 +314,7 @@
         <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" fill="#00c9ff"/>
         <path d="M19 12C19 15.866 15.866 19 12 19C8.13401 19 5 15.866 5 12C5 8.13401 8.13401 5 12 5C15.866 5 19 8.13401 19 12Z" stroke="#00c9ff" stroke-width="2"/>
       </svg>
-      <span>CAPTIONS LIVE - PHIÊN BẢN CAO CẤP</span>
+      <span>CAPTIONS LIVE - PHIÊN BẢN CÂU NGẮN</span>
     </div>
     
     <div class="controls">
@@ -379,7 +379,7 @@
   </div>
   
   <div class="footer">
-    Captions Live v3.0 | Tương thích GitHub Pages | Nhận diện giọng nói thời gian thực
+    Captions Live v5.0 | Khắc phục lỗi lặp chữ | Cập nhật từng câu ngắn
   </div>
   
   <audio id="fakeAudio" preload="auto" loop>
@@ -420,9 +420,10 @@
     // Biến trạng thái
     let fakeAudioPlaying = false;
     let idleTimeout;
-    let lastFinalResult = "";
-    let lastPartialResult = "";
     let recognitionActive = false;
+    let lastTranslationTime = 0; // Thời gian dịch cuối cùng
+    let sentenceBuffer = ""; // Bộ đệm câu
+    let lastProcessedText = ""; // Văn bản đã xử lý
 
     // Hàm hiển thị popup yêu cầu quyền
     function showPermissionPopup() {
@@ -458,6 +459,10 @@
           
           // Ẩn popup nếu đang hiển thị
           hidePermissionPopup();
+          
+          // Reset bộ đệm
+          sentenceBuffer = "";
+          lastProcessedText = "";
         })
         .catch(err => {
           console.error("Lỗi quyền microphone:", err);
@@ -478,6 +483,12 @@
       // Cập nhật giao diện
       document.querySelector('#partial .block-header span:last-child').textContent = 'Đã dừng';
       partialContent.textContent = '[⏹️ Đã dừng nhận diện]';
+      
+      // Xử lý phần còn lại trong bộ đệm
+      if (sentenceBuffer.trim()) {
+        processCompleteSentence(sentenceBuffer);
+        sentenceBuffer = "";
+      }
     }
 
     // Hàm khởi động âm thanh giả
@@ -516,53 +527,125 @@
       }, 5000);
     }
 
+    // Hàm xử lý câu hoàn chỉnh
+    function processCompleteSentence(sentence) {
+      // Thêm vào khung kết quả cuối cùng
+      if (finalContent.textContent.length > 0 && !finalContent.textContent.endsWith('\n')) {
+        finalContent.textContent += ' ';
+      }
+      finalContent.textContent += sentence;
+      
+      // Dịch văn bản
+      translate(sentence);
+      
+      // Reset bộ đệm
+      sentenceBuffer = "";
+    }
+
+    // Hàm tách câu từ văn bản
+    function extractSentences(text) {
+      const punctuation = ['.', '?', '!', ';', ','];
+      const sentences = [];
+      let startIndex = 0;
+      
+      // Tìm các điểm tách câu tự nhiên
+      for (let i = 0; i < text.length; i++) {
+        if (punctuation.includes(text[i])) {
+          // Kiểm tra xem có đủ ít nhất 5 từ không
+          const sentenceCandidate = text.substring(startIndex, i + 1).trim();
+          const wordCount = sentenceCandidate.split(/\s+/).length;
+          
+          if (wordCount >= 5) {
+            sentences.push(sentenceCandidate);
+            startIndex = i + 1;
+          }
+        }
+      }
+      
+      // Xử lý phần còn lại
+      const remaining = text.substring(startIndex).trim();
+      if (remaining && remaining.split(/\s+/).length >= 10) {
+        // Nếu phần còn lại dài hơn 10 từ, tách làm đôi
+        const words = remaining.split(/\s+/);
+        const half = Math.ceil(words.length / 2);
+        sentences.push(words.slice(0, half).join(' '));
+        sentenceBuffer = words.slice(half).join(' ');
+      } else if (remaining) {
+        sentenceBuffer = remaining;
+      }
+      
+      return sentences;
+    }
+
     // Sự kiện khi có kết quả nhận diện
     if (SpeechRecognition) {
       recog.onresult = async (e) => {
         resetIdleTimer();
         stopFakeAudio();
         
-        let finalText = "";
-        let partialText = "";
+        let hasNewText = false;
         
         for (let i = e.resultIndex; i < e.results.length; i++) {
           const result = e.results[i];
           const text = result[0].transcript.trim();
           
+          if (!text) continue;
+          
+          // Bỏ qua các cụm từ không mong muốn
+          if (text.toLowerCase().includes("a nam ơi")) continue;
+          
           if (result.isFinal) {
-            // Bỏ qua các cụm từ không mong muốn
-            if (text.toLowerCase().includes("a nam ơi")) continue;
+            // Xử lý kết quả cuối cùng
+            hasNewText = true;
+            lastProcessedText = text;
             
-            // Thêm dấu cách nếu cần
-            if (lastFinalResult && !lastFinalResult.endsWith(' ') && !lastFinalResult.endsWith('\n')) {
-              finalText += ' ';
+            // Thêm vào bộ đệm
+            if (sentenceBuffer) {
+              sentenceBuffer += ' ';
             }
+            sentenceBuffer += text;
             
-            finalText += text;
-            lastFinalResult = text;
+            // Tách câu từ bộ đệm
+            const sentences = extractSentences(sentenceBuffer);
             
-            // Thêm vào khung kết quả cuối cùng
-            if (finalContent.textContent.length > 0 && !finalContent.textContent.endsWith('\n')) {
-              finalContent.textContent += ' ';
-            }
-            finalContent.textContent += text;
-            
-            // Dịch văn bản
-            translate(text);
-            
-            // Xóa nội dung tạm thời
-            partialContent.textContent = "";
-            lastPartialResult = "";
+            // Xử lý các câu đã tách
+            sentences.forEach(sentence => {
+              processCompleteSentence(sentence);
+            });
           } else {
             // Xử lý kết quả tạm thời
-            partialText = text;
-            lastPartialResult = text;
+            hasNewText = true;
+            
+            // Hiển thị kết quả tạm thời
+            partialContent.textContent = text;
+            
+            // Thêm vào bộ đệm (chỉ phần mới)
+            if (!text.startsWith(lastProcessedText)) {
+              const newText = text.replace(lastProcessedText, '').trim();
+              if (newText) {
+                if (sentenceBuffer && !sentenceBuffer.endsWith(' ')) {
+                  sentenceBuffer += ' ';
+                }
+                sentenceBuffer += newText;
+                lastProcessedText = text;
+              }
+            }
+            
+            // Kiểm tra xem có thể tách câu từ bộ đệm không
+            if (sentenceBuffer.split(/\s+/).length >= 10) {
+              const sentences = extractSentences(sentenceBuffer);
+              
+              // Xử lý các câu đã tách
+              sentences.forEach(sentence => {
+                processCompleteSentence(sentence);
+              });
+            }
           }
         }
         
-        // Hiển thị kết quả tạm thời nếu có
-        if (partialText) {
-          partialContent.textContent = partialText;
+        // Hiển thị bộ đệm nếu không có văn bản mới
+        if (!hasNewText && sentenceBuffer) {
+          partialContent.textContent = sentenceBuffer;
         }
       };
 
